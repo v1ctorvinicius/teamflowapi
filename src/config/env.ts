@@ -32,7 +32,7 @@ export function requireEnv(key: string): string {
 // Configuração completa
 export const config = {
   nodeEnv: requireEnv("NODE_ENV"),
-  port: parseInt(process.env.PORT || requireEnv("API_PORT"), 10), // 🔥 PRIORIZA PORT do Render
+  port: parseInt(process.env.PORT || "3000", 10),
   database: {
     host: requireEnv("DB_HOST"),
     port: parseInt(requireEnv("DB_PORT"), 10),

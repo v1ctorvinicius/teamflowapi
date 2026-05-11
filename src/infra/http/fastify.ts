@@ -16,15 +16,25 @@ export async function createFastifyApp(): Promise<FastifyInstance> {
     disableRequestLogging: false,
   });
 
+  // 🔥 SOLUÇÃO DEFINITIVA: Rota para o health check do Render NA RAÍZ
+  app.get("/", (request, reply) => {
+    reply.status(200).send();
+  });
+
+  // 🔥 Suporte para o método HEAD na raiz (também necessário)
+  app.head("/", (request, reply) => {
+    reply.status(200).send();
+  });
+
   const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',')
-    : ['http://localhost:5173', 'http://localhost:3000'];
+    ? process.env.CORS_ORIGINS.split(",")
+    : ["http://localhost:5173", "http://localhost:3000"];
 
   await app.register(fastifyCors, {
     origin: corsOrigins,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   });
 
   // Global error handler

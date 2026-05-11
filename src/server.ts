@@ -1,3 +1,4 @@
+//src/server.ts
 import { createFastifyApp } from "./infra/http/fastify.ts";
 import { pgPool, closePgPool } from "./infra/db/postgres.ts";
 // import { redisClient, connectRedis, closeRedis } from "./infra/cache/redis.ts";
@@ -13,7 +14,6 @@ async function bootstrap() {
   // Register all routes
   await buildApp(app, { pgPool, redis: null as any });
 
-  // 🔥 CORREÇÃO: Usa PORT do ambiente (Render define isso)
   const PORT = process.env.PORT || 10000;
 
   // Start HTTP server
