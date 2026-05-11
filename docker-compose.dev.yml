@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: teamflow-db-dev
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "${DB_PORT}:5432"
+
+    volumes:
+      # dados persistidos do postgres
+      - postgres_dev_data:/var/lib/postgresql/data
+
+      # migrations automáticas
+      - ./scripts/migrations:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - teamflow-dev-network
+
+  cache:
+    image: redis:7-alpine
+    container_name: teamflow-cache-dev
+
+    ports:
+      - "${REDIS_PORT}:6379"
+
+    networks:
+      - teamflow-dev-network
+
+  api:
+    image: node:22-alpine
+    container_name: teamflow-api-dev
+
+    working_dir: /app
+
+    volumes:
+      - .:/app
+
+    ports:
+      - "${API_PORT}:3000"
+
+    env_file:
+      - .env.dev
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    command: >
+      sh -c "
+        npm install &&
+        npm run dev
+      "
+
+    networks:
+      - teamflow-dev-network
+
+networks:
+  teamflow-dev-network:
+
+volumes:
+  postgres_dev_data:
