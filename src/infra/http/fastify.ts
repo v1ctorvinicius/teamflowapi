@@ -16,13 +16,7 @@ export async function createFastifyApp(): Promise<FastifyInstance> {
     disableRequestLogging: false,
   });
 
-  // 🔥 SOLUÇÃO DEFINITIVA: Rota para o health check do Render NA RAÍZ
   app.get("/", (request, reply) => {
-    reply.status(200).send();
-  });
-
-  // 🔥 Suporte para o método HEAD na raiz (também necessário)
-  app.head("/", (request, reply) => {
     reply.status(200).send();
   });
 
