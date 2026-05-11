@@ -1,4 +1,3 @@
-// src/server.ts - versão corrigida
 import { createFastifyApp } from "./infra/http/fastify.ts";
 import { pgPool, closePgPool } from "./infra/db/postgres.ts";
 // import { redisClient, connectRedis, closeRedis } from "./infra/cache/redis.ts";
@@ -14,14 +13,17 @@ async function bootstrap() {
   // Register all routes
   await buildApp(app, { pgPool, redis: null as any });
 
+  // 🔥 CORREÇÃO: Usa PORT do ambiente (Render define isso)
+  const PORT = process.env.PORT || config.port || 3000;
+
   // Start HTTP server
   try {
-    const address = await app.listen({ port: config.port, host: "0.0.0.0" });
-    app.log.info(`[API] Server listening at ${address}`);
-    app.log.info(`[API] Health → ${address}/health`);
-    app.log.info(`[API] Liveness → ${address}/live`);
-    app.log.info(`[API] Readiness → ${address}/ready`);
-    app.log.info(`[API] CORS enabled for http://localhost:5173`);
+    const address = await app.listen({ port: PORT, host: "0.0.0.0" });
+    app.log.info(`[API] Server listening on port ${PORT}`);
+    app.log.info(`[API] Health → /health`);
+    app.log.info(`[API] Liveness → /live`);
+    app.log.info(`[API] Readiness → /ready`);
+    app.log.info(`[API] CORS enabled for configured origins`);
   } catch (err) {
     app.log.error(err, "[API] Failed to start server");
     process.exit(1);
@@ -32,7 +34,7 @@ async function bootstrap() {
     app.log.info(`[API] ${signal} received — shutting down gracefully`);
     try {
       await app.close();
-      // await closeRedis();  // ← COMENTE ESTA LINHA
+      // await closeRedis();
       await closePgPool();
       app.log.info("[API] Shutdown complete");
       process.exit(0);

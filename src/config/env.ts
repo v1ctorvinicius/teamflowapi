@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "../../.env");
 
-// Carrega manualmente o .env
-if (fs.existsSync(envPath)) {
+// Carrega manualmente o .env (apenas para desenvolvimento)
+if (process.env.NODE_ENV !== "production" && fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, "utf-8");
   envContent.split("\n").forEach((line) => {
     const trimmed = line.trim();
@@ -32,7 +32,7 @@ export function requireEnv(key: string): string {
 // Configuração completa
 export const config = {
   nodeEnv: requireEnv("NODE_ENV"),
-  port: parseInt(requireEnv("API_PORT"), 10),
+  port: parseInt(process.env.PORT || requireEnv("API_PORT"), 10), // 🔥 PRIORIZA PORT do Render
   database: {
     host: requireEnv("DB_HOST"),
     port: parseInt(requireEnv("DB_PORT"), 10),
@@ -41,8 +41,8 @@ export const config = {
     password: requireEnv("DB_PASSWORD"),
   },
   redis: {
-    host: requireEnv("REDIS_HOST"),
-    port: parseInt(requireEnv("REDIS_PORT"), 10),
+    host: process.env.REDIS_HOST || "",
+    port: parseInt(process.env.REDIS_PORT || "6379"),
     password: process.env.REDIS_PASSWORD || undefined,
   },
   jwt: {
