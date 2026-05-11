@@ -1,3 +1,4 @@
+// src/infra/db/postgres.ts
 import pg from "pg";
 import { config } from "../../config/env.ts";
 
@@ -12,6 +13,9 @@ export function getPgPool(): pg.Pool {
       max: 20,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     });
 
     pool.on("error", (err) => {
@@ -30,5 +34,4 @@ export async function closePgPool(): Promise<void> {
   }
 }
 
-// Export singleton for convenience
 export const pgPool = getPgPool();
