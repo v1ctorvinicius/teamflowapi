@@ -11,7 +11,6 @@ export async function adminRoutes(
   const repo = new PostgresProductsRepository(options.pgPool);
   const service = new ProductsService(repo);
 
-  // ── Listar produtos (inclui inativos) ──────────────────────────────────────
   app.get(
     "/products",
     { preHandler: [requireAdmin] },
@@ -22,7 +21,6 @@ export async function adminRoutes(
     },
   );
 
-  // ── Criar produto ──────────────────────────────────────────────────────────
   app.post(
     "/products",
     {
@@ -30,18 +28,30 @@ export async function adminRoutes(
       schema: {
         body: {
           type: "object",
-          required: ["name", "club", "season", "type", "sizes", "basePrice", "stockBySize"],
+          required: ["name", "club", "season", "type", "basePrice"],
           properties: {
-            name:             { type: "string", minLength: 1 },
-            club:             { type: "string", minLength: 1 },
-            season:           { type: "string", minLength: 1 },
-            type:             { type: "string", enum: ["PLAYER", "FAN"] },
-            sizes:            { type: "array", items: { type: "string" } },
-            basePrice:        { type: "integer", minimum: 0 },
-            description:      { type: "string" },
-            imageUrl:         { type: "string" },
-            supplierMetadata: { type: "object" },
-            stockBySize:      { type: "object" },
+            name:        { type: "string", minLength: 1 },
+            club:        { type: "string", minLength: 1 },
+            season:      { type: "string", minLength: 1 },
+            type:        { type: "string", enum: ["PLAYER", "FAN"] },
+            category:    { type: "string", enum: ["SHIRT", "SHOE", "COMBO"], default: "SHIRT" },
+            basePrice:   { type: "integer", minimum: 0 },
+            description: { type: "string", nullable: true },
+            imageUrl:    { type: "string", nullable: true },
+            imageUrls:   { type: "array", items: { type: "string" }, default: [] },
+            isFeatured:  { type: "boolean", default: false },
+            
+            enableCategoricalSizes: { type: "boolean", default: true },
+            categoricalSizesLabel:  { type: "string", default: "Tamanho" },
+            stockCategorical:       { type: "array", items: { type: "string" }, default: [] },
+            stockCategoricalBySize: { type: "object", additionalProperties: { type: "number" }, default: {} },
+            
+            enableNumericSizes: { type: "boolean", default: false },
+            numericSizesLabel:  { type: "string", default: "Tamanho" },
+            stockNumeric:       { type: "object", additionalProperties: { type: "number" }, default: {} },
+            
+            supplierMetadata: { type: "object", default: {} },
+            slug: { type: "string" },
           },
         },
       },
@@ -52,7 +62,6 @@ export async function adminRoutes(
     },
   );
 
-  // ── Atualizar produto (parcial) ────────────────────────────────────────────
   app.patch(
     "/products/:id",
     {
@@ -61,13 +70,29 @@ export async function adminRoutes(
         body: {
           type: "object",
           properties: {
-            name:             { type: "string", minLength: 1 },
-            basePrice:        { type: "integer", minimum: 0 },
-            description:      { type: "string" },
-            imageUrl:         { type: "string" },
+            name:        { type: "string", minLength: 1 },
+            club:        { type: "string", minLength: 1 },
+            season:      { type: "string", minLength: 1 },
+            type:        { type: "string", enum: ["PLAYER", "FAN"] },
+            category:    { type: "string", enum: ["SHIRT", "SHOE", "COMBO"] },
+            basePrice:   { type: "integer", minimum: 0 },
+            description: { type: "string", nullable: true },
+            imageUrl:    { type: "string", nullable: true },
+            imageUrls:   { type: "array", items: { type: "string" } },
+            isActive:    { type: "boolean" },
+            isFeatured:  { type: "boolean" },
+            
+            enableCategoricalSizes: { type: "boolean" },
+            categoricalSizesLabel:  { type: "string" },
+            stockCategorical:       { type: "array", items: { type: "string" } },
+            stockCategoricalBySize: { type: "object", additionalProperties: { type: "number" } },
+            
+            enableNumericSizes: { type: "boolean" },
+            numericSizesLabel:  { type: "string" },
+            stockNumeric:       { type: "object", additionalProperties: { type: "number" } },
+            
             supplierMetadata: { type: "object" },
-            stockBySize:      { type: "object" },
-            isActive:         { type: "boolean" },
+            slug: { type: "string" },
           },
         },
       },
@@ -79,7 +104,6 @@ export async function adminRoutes(
     },
   );
 
-  // ── Soft-delete ────────────────────────────────────────────────────────────
   app.delete(
     "/products/:id",
     { preHandler: [requireAdmin] },
@@ -90,7 +114,6 @@ export async function adminRoutes(
     },
   );
 
-  // ── Listar usuários (base para exportar CSV depois) ────────────────────────
   app.get(
     "/users",
     { preHandler: [requireAdmin] },
