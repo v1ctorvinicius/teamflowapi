@@ -14,7 +14,7 @@ async function bootstrap() {
   await buildApp(app, { pgPool, redis: null as any });
 
   // 🔥 CORREÇÃO: Usa PORT do ambiente (Render define isso)
-  const PORT = process.env.PORT || config.port || 3000;
+  const PORT = process.env.PORT || 10000;
 
   // Start HTTP server
   try {
