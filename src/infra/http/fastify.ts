@@ -16,12 +16,12 @@ export async function createFastifyApp(): Promise<FastifyInstance> {
     disableRequestLogging: false,
   });
 
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
   await app.register(fastifyCors, {
-    origin: [
-      'http://localhost:5173',  // Vite dev server
-      'http://localhost:3000',   // Backend
-      /\.yourdomain\.com$/       // dominio customizado
-    ],
+    origin: corsOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
