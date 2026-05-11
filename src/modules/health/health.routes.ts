@@ -21,7 +21,14 @@ async function checkPostgres(pool: Pool) {
   }
 }
 
-async function checkRedis(redis: RedisClientType) {
+async function checkRedis(redis: RedisClientType | null) {
+  if (!redis) {
+    return {
+      status: "disabled" as const,
+      responseTimeMs: 0,
+    };
+  }
+
   const start = Date.now();
   try {
     const ping = await redis.ping();
@@ -45,7 +52,7 @@ async function checkRedis(redis: RedisClientType) {
 
 export async function healthRoutes(
   app: FastifyInstance,
-  options: { pgPool: Pool; redis: RedisClientType },
+  options: { pgPool: Pool; redis: RedisClientType | null },
 ) {
   const { pgPool, redis } = options;
 
@@ -57,8 +64,7 @@ export async function healthRoutes(
       checkRedis(redis),
     ]);
 
-    const isHealthy =
-      postgres.status === "healthy" && redisResult.status === "healthy";
+    const isHealthy = postgres.status === "healthy";
 
     return reply.status(isHealthy ? 200 : 503).send({
       status: isHealthy ? "healthy" : "degraded",
@@ -86,8 +92,7 @@ export async function healthRoutes(
       checkRedis(redis),
     ]);
 
-    const isReady =
-      postgres.status === "healthy" && redisResult.status === "healthy";
+    const isReady = postgres.status === "healthy";
 
     return reply.status(isReady ? 200 : 503).send({
       ready: isReady,
