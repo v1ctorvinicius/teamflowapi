@@ -1,3 +1,4 @@
+//src/config/env.ts
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -6,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "../../.env");
 
-// Carrega manualmente o .env (apenas para desenvolvimento)
+// DEV ONLY
 if (process.env.NODE_ENV !== "production" && fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, "utf-8");
   envContent.split("\n").forEach((line) => {
@@ -32,7 +33,9 @@ export function requireEnv(key: string): string {
 // Configuração completa
 export const config = {
   nodeEnv: requireEnv("NODE_ENV"),
-  port: parseInt(process.env.PORT || "3000", 10),
+  port: parseInt(process.env.PORT || "10000", 10),
+  corsOrigins: process.env.CORS_ORIGINS?.split(",") || ["http://localhost:5173", "http://localhost:3000"],
+  dbSSL: process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true',
   database: {
     host: requireEnv("DB_HOST"),
     port: parseInt(requireEnv("DB_PORT"), 10),

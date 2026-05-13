@@ -13,9 +13,7 @@ export function getPgPool(): pg.Pool {
       max: 20,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      ...(config.dbSSL && { ssl: { rejectUnauthorized: false } }),
     });
 
     pool.on("error", (err) => {

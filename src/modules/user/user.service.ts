@@ -16,6 +16,7 @@ import {
   ConflictError,
   NotFoundError,
   ValidationError,
+  UnauthorizedError,
 } from "../../shared/errors.ts";
 import { AuthService } from "../auth/auth.service.ts";
 
@@ -25,6 +26,12 @@ async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
   const key = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${salt}:${key.toString("hex")}`;
+}
+
+async function comparePassword(password: string, hashed: string): Promise<boolean> {
+  const [salt, key] = hashed.split(":");
+  const derivedKey = (await scryptAsync(password, salt, 64)) as Buffer;
+  return timingSafeEqual(derivedKey, Buffer.from(key, "hex"));
 }
 
 function toPublicUser(user: User): PublicUser {
@@ -52,7 +59,6 @@ export class UsersService {
       throw new ValidationError("password must be at least 8 characters");
     }
 
-    // favoriteTeam vazio deve ser rejeitado
     if (input.favoriteTeam !== undefined && input.favoriteTeam.trim() === "") {
       throw new ValidationError("favoriteTeam cannot be empty");
     }
@@ -71,7 +77,6 @@ export class UsersService {
       favoriteTeam: input.favoriteTeam,
     });
 
-    // Emite o par de tokens imediatamente após o registro
     const tokens = await this.authService.issueTokenPairForUser(
       user.id,
       user.email,
@@ -94,7 +99,50 @@ export class UsersService {
   async updateProfile(id: UUID, input: UpdateUserInput): Promise<PublicUser> {
     const user = await this.repo.findById(id);
     if (!user) throw new NotFoundError("User not found");
+    
+    if (input.email && input.email !== user.email) {
+      const existing = await this.repo.findByEmail(input.email.toLowerCase());
+      if (existing) throw new ConflictError("Email already in use");
+    }
+    
     const updated = await this.repo.update(id, input);
     return toPublicUser(updated);
+  }
+
+  // password
+  async changePassword(userId: UUID, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.repo.findById(userId);
+    if (!user) throw new NotFoundError("User not found");
+    
+    const isValid = await comparePassword(currentPassword, user.passwordHash);
+    if (!isValid) {
+      throw new UnauthorizedError("Senha atual incorreta");
+    }
+    
+    if (newPassword.length < 8) {
+      throw new ValidationError("Senha deve ter no mínimo 8 caracteres");
+    }
+    
+    const newHash = await hashPassword(newPassword);
+    await this.repo.updatePassword(userId, newHash);
+  }
+
+  // wishlist
+  async getWishlist(userId: UUID): Promise<any[]> {
+    return this.repo.getWishlist(userId);
+  }
+
+  async addToWishlist(userId: UUID, productId: string): Promise<void> {
+    const product = await this.repo.findProductById(productId);
+    if (!product) throw new NotFoundError("Product not found");
+    await this.repo.addToWishlist(userId, productId);
+  }
+
+  async removeFromWishlist(userId: UUID, productId: string): Promise<void> {
+    await this.repo.removeFromWishlist(userId, productId);
+  }
+
+  async isInWishlist(userId: UUID, productId: string): Promise<boolean> {
+    return this.repo.isInWishlist(userId, productId);
   }
 }

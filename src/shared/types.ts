@@ -18,4 +18,3 @@ export interface PaginationParams {
   limit?: number;
 }
 
-export type UserRole = "CUSTOMER" | "ADMIN" | "AFFILIATE";

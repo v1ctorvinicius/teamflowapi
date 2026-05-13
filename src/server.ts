@@ -14,7 +14,7 @@ async function bootstrap() {
   // Register all routes
   await buildApp(app, { pgPool, redis: null as any });
 
-  const PORT = process.env.PORT || 10000;
+  const PORT = config.port;
 
   // Start HTTP server
   try {

@@ -1,3 +1,4 @@
+//auth.controller.ts
 import type { FastifyRequest, FastifyReply } from "fastify";
 import type { AuthService } from "./auth.service.ts";
 import type { LoginInput, RefreshInput } from "./auth.types.ts";

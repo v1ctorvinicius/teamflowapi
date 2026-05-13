@@ -20,12 +20,8 @@ export async function createFastifyApp(): Promise<FastifyInstance> {
     reply.status(200).send();
   });
 
-  const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(",")
-    : ["http://localhost:5173", "http://localhost:3000"];
-
   await app.register(fastifyCors, {
-    origin: corsOrigins,
+    origin: config.corsOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],

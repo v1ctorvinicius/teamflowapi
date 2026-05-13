@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
 
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
 
     volumes:
       # dados persistidos do postgres
@@ -47,7 +47,7 @@ services:
       - .:/app
 
     ports:
-      - "${API_PORT}:3000"
+      - "${PORT}:3000"
 
     env_file:
       - .env.dev

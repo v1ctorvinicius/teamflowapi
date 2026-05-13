@@ -10,4 +10,11 @@ export interface UsersRepository {
   findById(id: UUID): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   update(id: UUID, input: UpdateUserInput): Promise<User>;
+  updatePassword(userId: UUID, newPasswordHash: string): Promise<User>;
+  updateProfile(userId: UUID, input: UpdateProfileInput): Promise<PublicUser>;
+  addToWishlist(userId: UUID, productId: UUID): Promise<void>;
+  removeFromWishlist(userId: UUID, productId: UUID): Promise<void>;
+  getWishlist(userId: UUID): Promise<Product[]>;
+  isInWishlist(userId: UUID, productId: UUID): Promise<boolean>;
+  findProductById(productId: string): Promise<any>;
 }
