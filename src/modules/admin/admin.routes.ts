@@ -72,7 +72,7 @@ export async function adminRoutes(
           type: "object",
           properties: {
             name:        { type: "string", minLength: 1 },
-            club:        { type: "string", minLength: 1, nullable: true },
+            club:        { type: "string", nullable: true },
             brand:       { type: "string", minLength: 1 },
             season:      { type: "string", minLength: 1 },
             type:        { type: "string", enum: ["PLAYER", "FAN"] },
