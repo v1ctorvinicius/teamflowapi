@@ -28,7 +28,7 @@ export async function usersRoutes(
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 8 },
             name: { type: "string", minLength: 1 },
-            favoriteTeam: { type: "string", minLength: 1 },
+            favoriteTeam: { type: "string" },
           },
         },
       },
@@ -51,7 +51,7 @@ export async function usersRoutes(
           type: "object",
           properties: {
             name: { type: "string", minLength: 1 },
-            favoriteTeam: { type: "string", minLength: 1 },
+            favoriteTeam: { type: "string" },
           },
         },
       },

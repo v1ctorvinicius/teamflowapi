@@ -28,13 +28,14 @@ export async function adminRoutes(
       schema: {
         body: {
           type: "object",
-          required: ["name", "club", "season", "type", "basePrice"],
+          required: ["name", "season", "type", "basePrice", "categorySlug"],
           properties: {
             name:        { type: "string", minLength: 1 },
             club:        { type: "string", minLength: 1 },
+            brand:       { type: "string", minLength: 1 },
             season:      { type: "string", minLength: 1 },
             type:        { type: "string", enum: ["PLAYER", "FAN"] },
-            category:    { type: "string", enum: ["SHIRT", "SHOE", "COMBO"], default: "SHIRT" },
+            categorySlug: { type: "string", minLength: 1 },
             basePrice:   { type: "integer", minimum: 0 },
             description: { type: "string", nullable: true },
             imageUrl:    { type: "string", nullable: true },
@@ -71,10 +72,11 @@ export async function adminRoutes(
           type: "object",
           properties: {
             name:        { type: "string", minLength: 1 },
-            club:        { type: "string", minLength: 1 },
+            club:        { type: "string", minLength: 1, nullable: true },
+            brand:       { type: "string", minLength: 1 },
             season:      { type: "string", minLength: 1 },
             type:        { type: "string", enum: ["PLAYER", "FAN"] },
-            category:    { type: "string", enum: ["SHIRT", "SHOE", "COMBO"] },
+            categorySlug: { type: "string", minLength: 1 },
             basePrice:   { type: "integer", minimum: 0 },
             description: { type: "string", nullable: true },
             imageUrl:    { type: "string", nullable: true },
@@ -126,4 +128,86 @@ export async function adminRoutes(
       return reply.send({ data: result.rows });
     },
   );
+
+  app.get('/categories', { onRequest: [requireAdmin] }, async (_request, reply) => {
+    const categories = await repo.findCategories();
+    return reply.send({ data: categories });
+  });
+   
+  app.post('/categories', { onRequest: [requireAdmin] }, async (request, reply) => {
+    const { label, icon, sortOrder } = request.body as {
+      label: string;
+      icon?: string;
+      sortOrder?: number;
+    };
+   
+    if (!label?.trim()) {
+      return reply.status(400).send({ message: 'Label é obrigatório' });
+    }
+   
+    const slug = label
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-');
+   
+    const result = await options.pgPool.query(
+      `INSERT INTO product_categories (slug, label, icon, sort_order)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (slug) DO NOTHING
+       RETURNING *`,
+      [slug, label.trim(), icon ?? null, sortOrder ?? 99],
+    );
+   
+    if (!result.rows[0]) {
+      return reply.status(409).send({ message: 'Categoria com esse nome já existe' });
+    }
+   
+    return reply.status(201).send({ data: result.rows[0] });
+  });
+   
+  app.patch('/categories/:slug', { onRequest: [requireAdmin] }, async (request, reply) => {
+    const { slug } = request.params as { slug: string };
+    const { label, icon, sortOrder, isActive } = request.body as {
+      label?: string;
+      icon?: string;
+      sortOrder?: number;
+      isActive?: boolean;
+    };
+   
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    let idx = 1;
+   
+    if (label !== undefined) { fields.push(`label = $${idx++}`); values.push(label); }
+    if (icon !== undefined)  { fields.push(`icon = $${idx++}`);  values.push(icon);  }
+    if (sortOrder !== undefined) { fields.push(`sort_order = $${idx++}`); values.push(sortOrder); }
+    if (isActive !== undefined)  { fields.push(`is_active = $${idx++}`);  values.push(isActive);  }
+   
+    if (!fields.length) {
+      return reply.status(400).send({ message: 'Nada para atualizar' });
+    }
+   
+    values.push(slug);
+   
+    const result = await options.pgPool.query(
+      `UPDATE product_categories SET ${fields.join(', ')} WHERE slug = $${idx++} RETURNING *`,
+      values,
+    );
+   
+    return reply.send({ data: result.rows[0] });
+  });
+   
+  app.delete('/categories/:slug', { onRequest: [requireAdmin] }, async (request, reply) => {
+    const { slug } = request.params as { slug: string };
+   
+    await options.pgPool.query(
+      `UPDATE product_categories SET is_active = false WHERE slug = $1`,
+      [slug],
+    );
+   
+    return reply.send({ message: 'Categoria desativada' });
+  });
 }

@@ -4,6 +4,7 @@ import type { Pool } from "pg";
 import { PostgresProductsRepository } from "./product.repository.pg.ts";
 import { ProductsService } from "./product.service.ts";
 import { ProductsController } from "./product.controller.ts";
+import { requireAdmin } from "../auth/auth.hooks.ts";
 
 export async function productsRoutes(
   app: FastifyInstance,
@@ -26,14 +27,23 @@ export async function productsRoutes(
     }
     return reply.send({ data: product });
   });
+
+  app.get('/categories', async (_request, reply) => {
+    const categories = await repo.findCategories();
+    return reply.send({ data: categories });
+  });
+   
+  app.get('/by-category/:slug', async (request, reply) => {
+    const { slug } = request.params as { slug: string };
+    const { limit } = request.query as { limit?: string };
+    const products = await repo.findByCategory(slug, limit ? Number(limit) : 12);
+    return reply.send({ data: products });
+  });
   
-  // Specific route FIRST
   app.get("/:id", controller.get.bind(controller));
 
-  // Generic route LAST
   app.get("/", controller.list.bind(controller));
 
-  // POST route
   app.post(
     "/:id/validate-personalization",
     {

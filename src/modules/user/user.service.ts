@@ -8,7 +8,7 @@ import type {
   User,
   PublicUser,
   RegisterUserInput,
-  UpdateUserInput,
+  UpdateProfileInput,
 } from "./user.types.ts";
 import type { TokenPair } from "../auth/auth.types.ts";
 import type { UUID } from "../../shared/types.ts";
@@ -28,7 +28,10 @@ async function hashPassword(password: string): Promise<string> {
   return `${salt}:${key.toString("hex")}`;
 }
 
-async function comparePassword(password: string, hashed: string): Promise<boolean> {
+async function comparePassword(
+  password: string,
+  hashed: string,
+): Promise<boolean> {
   const [salt, key] = hashed.split(":");
   const derivedKey = (await scryptAsync(password, salt, 64)) as Buffer;
   return timingSafeEqual(derivedKey, Buffer.from(key, "hex"));
@@ -96,33 +99,40 @@ export class UsersService {
     return this.repo.findByEmail(email.toLowerCase());
   }
 
-  async updateProfile(id: UUID, input: UpdateUserInput): Promise<PublicUser> {
+  async updateProfile(
+    id: UUID,
+    input: UpdateProfileInput,
+  ): Promise<PublicUser> {
     const user = await this.repo.findById(id);
     if (!user) throw new NotFoundError("User not found");
-    
+
     if (input.email && input.email !== user.email) {
       const existing = await this.repo.findByEmail(input.email.toLowerCase());
       if (existing) throw new ConflictError("Email already in use");
     }
-    
-    const updated = await this.repo.update(id, input);
+
+    const updated = await this.repo.updateProfile(id, input);
     return toPublicUser(updated);
   }
 
   // password
-  async changePassword(userId: UUID, currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: UUID,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.repo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
-    
+
     const isValid = await comparePassword(currentPassword, user.passwordHash);
     if (!isValid) {
       throw new UnauthorizedError("Senha atual incorreta");
     }
-    
+
     if (newPassword.length < 8) {
       throw new ValidationError("Senha deve ter no mínimo 8 caracteres");
     }
-    
+
     const newHash = await hashPassword(newPassword);
     await this.repo.updatePassword(userId, newHash);
   }

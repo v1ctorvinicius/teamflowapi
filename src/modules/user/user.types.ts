@@ -8,11 +8,11 @@ export interface User {
   email: string;
   passwordHash: string;
   name: string;
-  role: 'CUSTOMER' | 'ADMIN' | 'AFFILIATE';
+  role: "CUSTOMER" | "ADMIN" | "AFFILIATE";
   favoriteTeam?: string;
   emailVerified: boolean;
   phone?: string;
-  
+
   addressStreet?: string;
   addressNumber?: string;
   addressComplement?: string;
@@ -20,12 +20,12 @@ export interface User {
   addressState?: string;
   addressZip?: string;
   addressCountry: string;
-  
+
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
 
-export interface PublicUser extends Omit<User, 'passwordHash'> {}
+export interface PublicUser extends Omit<User, "passwordHash"> {}
 
 // inputs
 export interface CreateUserInput {
@@ -35,10 +35,7 @@ export interface CreateUserInput {
   favoriteTeam?: string;
 }
 
-export interface UpdateUserInput {
-  name?: string;
-  favoriteTeam?: string;
-}
+export type UpdateUserInput = UpdateProfileInput;
 
 export interface RegisterUserInput {
   email: string;
@@ -52,7 +49,7 @@ export interface UpdateProfileInput {
   email?: string;
   phone?: string;
   favoriteTeam?: string;
-  
+
   addressStreet?: string;
   addressNumber?: string;
   addressComplement?: string;
@@ -66,4 +63,3 @@ export interface ChangePasswordInput {
   newPassword: string;
   confirmPassword: string;
 }
-

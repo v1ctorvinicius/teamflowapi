@@ -1,20 +1,37 @@
-// product.types.ts
-import type { UUID, ISODateString, ShirtSize, ShirtType } from "../../shared/types.ts";
+// src/modules/product/product.types.ts
 
-export type ProductCategory = 'SHIRT' | 'SHOE' | 'COMBO';
+import type { UUID, ISODateString } from "../../shared/types.ts";
 
-export type ShirtSize = 'PP' | 'P' | 'M' | 'G' | 'GG' | 'XGG' | '2XGG';
+// Categorias fixas legadas (mantidas para compatibilidade)
+export type ProductCategory = "SHIRT" | "SHOE" | "COMBO" | "ACCESSORY" | string;
+
+export type ShirtSize = "PP" | "P" | "M" | "G" | "GG" | "XGG" | "2XGG";
 export type ShirtType = "PLAYER" | "FAN";
-
 export type ShoeSize = string;
+
+export interface ProductCategoryDef {
+  id: UUID;
+  slug: string;
+  label: string;
+  icon?: string;
+  sortOrder: number;
+  isActive: boolean;
+}
 
 export interface Product {
   id: UUID;
   name: string;
-  club: string;
-  season: string;
+
+  club?: string | null;
+
+  brand?: string | null;
+
+  season?: string | null;
+
   category: ProductCategory;
-  type: 'PLAYER' | 'FAN';
+  categorySlug?: string | null;
+
+  type: ShirtType;
 
   enableCategoricalSizes: boolean;
   categoricalSizesLabel: string;
@@ -36,42 +53,46 @@ export interface Product {
 
   createdAt: ISODateString;
   updatedAt: ISODateString;
-  supplierMetadata: Record<string, unknown>; // JSONB
+  supplierMetadata: Record<string, unknown>;
 }
 
 export interface Personalization {
-  name?: string;  // max 12 chars
+  name?: string; // max 12 chars
   number?: number; // 0-99
 }
 
 export interface CreateProductInput {
   name: string;
-  club: string;
-  season: string;
+  club?: string;
+  brand?: string;
+  season?: string;
   category: ProductCategory;
-  type: 'PLAYER' | 'FAN';
+  categorySlug?: string;
+  type: ShirtType;
 
   enableCategoricalSizes?: boolean;
   categoricalSizesLabel?: string;
   stockCategorical?: ShirtSize[];
   stockCategoricalBySize?: Record<ShirtSize, number>;
-  
+
   enableNumericSizes?: boolean;
   numericSizesLabel?: string;
   stockNumeric?: Record<string, number>;
-  
+
   basePrice: number;
   description?: string;
   imageUrl?: string;
   imageUrls?: string[];
-
   isFeatured?: boolean;
-
   supplierMetadata?: Record<string, unknown>;
 }
 
 export interface UpdateProductInput {
   name?: string;
+  club?: string | null;
+  brand?: string | null;
+  season?: string | null;
+  categorySlug?: string;
   basePrice?: number;
   description?: string;
   imageUrl?: string;
@@ -81,23 +102,23 @@ export interface UpdateProductInput {
   categoricalSizesLabel?: string;
   stockCategorical?: ShirtSize[];
   stockCategoricalBySize?: Record<ShirtSize, number>;
-  
+
   enableNumericSizes?: boolean;
   numericSizesLabel?: string;
   stockNumeric?: Record<string, number>;
 
   isFeatured?: boolean;
   isActive?: boolean;
-
   supplierMetadata?: Record<string, unknown>;
 }
 
 export interface ProductFilters {
   club?: string;
-  type?: 'PLAYER' | 'FAN';
+  brand?: string;
   category?: ProductCategory;
+  categorySlug?: string;
+  type?: ShirtType;
   season?: string;
-
   sizeCategorical?: ShirtSize;
   sizeNumeric?: string;
   featured?: boolean;
@@ -105,7 +126,6 @@ export interface ProductFilters {
   limit?: number;
 }
 
-// RN-01: current squad player+number combos that are restricted for FAN replicas
 export interface SquadRestriction {
   playerName: string;
   number: number;
