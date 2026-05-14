@@ -4,7 +4,7 @@ import type { UUID, ISODateString } from "../../shared/types.ts";
 
 // Categorias fixas legadas (mantidas para compatibilidade)
 export type ProductCategory = "SHIRT" | "SHOE" | "COMBO" | "ACCESSORY" | string;
-
+export type ProductGender = "MASCULINE" | "FEMININE" | "UNISEX";
 export type ShirtSize = "PP" | "P" | "M" | "G" | "GG" | "XGG" | "2XGG";
 export type ShirtType = "PLAYER" | "FAN";
 export type ShoeSize = string;
@@ -32,6 +32,11 @@ export interface Product {
   categorySlug?: string | null;
 
   type: ShirtType;
+  gender: ProductGender;
+  allowPersonalization: boolean;
+  infiniteStock: boolean;
+  isNew: boolean | null;
+  isNewDays: number;
 
   enableCategoricalSizes: boolean;
   categoricalSizesLabel: string;
@@ -68,7 +73,12 @@ export interface CreateProductInput {
   season?: string;
   category: ProductCategory;
   categorySlug?: string;
-  type: ShirtType;
+  type?: ShirtType;
+  gender?: ProductGender;
+  allowPersonalization?: boolean;
+  infiniteStock?: boolean;
+  isNew?: boolean | null;
+  isNewDays?: number;
 
   enableCategoricalSizes?: boolean;
   categoricalSizesLabel?: string;
@@ -93,6 +103,12 @@ export interface UpdateProductInput {
   brand?: string | null;
   season?: string | null;
   categorySlug?: string;
+  type?: ShirtType;
+  gender?: ProductGender;
+  allowPersonalization?: boolean;
+  infiniteStock?: boolean;
+  isNew?: boolean | null;
+  isNewDays?: number;
   basePrice?: number;
   description?: string;
   imageUrl?: string;
@@ -118,6 +134,7 @@ export interface ProductFilters {
   category?: ProductCategory;
   categorySlug?: string;
   type?: ShirtType;
+  gender?: ProductGender;
   season?: string;
   sizeCategorical?: ShirtSize;
   sizeNumeric?: string;

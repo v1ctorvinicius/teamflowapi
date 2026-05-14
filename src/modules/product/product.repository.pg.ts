@@ -1,4 +1,3 @@
-// src/modules/product/product.repository.pg.ts
 import type { Pool } from "pg";
 import type { ProductsRepository } from "./products.repository.ts";
 import type {
@@ -120,7 +119,12 @@ function mapRowToProduct(row: Record<string, unknown>): Product {
     season: (row.season as string | null) ?? null,
     category: (row.category as ProductCategory) || "SHIRT",
     categorySlug: (row.category_slug as string | null) ?? null,
-    type: (row.type as ShirtType) || "FAN",
+    type: (row.type as ShirtType | null) ?? null,
+    gender: (row.gender as ProductGender) || "UNISEX",
+    allowPersonalization: (row.allow_personalization as boolean) ?? false,
+    infiniteStock: (row.infinite_stock as boolean) ?? false,
+    isNew: row.is_new as boolean | null,
+    isNewDays: (row.is_new_days as number) ?? 14,
 
     enableCategoricalSizes: (row.enable_categorical_sizes as boolean) ?? true,
     categoricalSizesLabel: (row.categorical_sizes_label as string) || "Tamanho",
@@ -183,6 +187,11 @@ export class PostgresProductsRepository implements ProductsRepository {
     if (filters.size) {
       conditions.push(`$${idx++} = ANY(stock_categorical)`);
       values.push(filters.size);
+    }
+
+    if (filters.gender) {
+      conditions.push(`gender = $${idx++}`);
+      values.push(filters.gender);
     }
 
     const where = `WHERE ${conditions.join(" AND ")}`;
@@ -334,9 +343,11 @@ export class PostgresProductsRepository implements ProductsRepository {
       (name, club, club_search, brand, season, category, category_slug, type,
        enable_categorical_sizes, categorical_sizes_label, stock_categorical, stock_categorical_by_size,
        enable_numeric_sizes, numeric_sizes_label, stock_numeric,
-       base_price, description, image_url, image_urls, slug, is_featured, supplier_metadata)
+       base_price, description, image_url, image_urls, slug, is_featured, supplier_metadata,
+       gender, allow_personalization, infinite_stock, is_new, is_new_days)
       VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22,
+       $23, $24, $25, $26, $27)
       RETURNING *`,
       [
         input.name,
@@ -364,6 +375,12 @@ export class PostgresProductsRepository implements ProductsRepository {
         slug,
         input.isFeatured ?? false,
         JSON.stringify(input.supplierMetadata ?? {}),
+
+        input.gender || "UNISEX",
+        input.allowPersonalization ?? false,
+        input.infiniteStock ?? false,
+        input.isNew ?? null,
+        input.isNewDays ?? 14,
       ],
     );
 
@@ -378,6 +395,11 @@ export class PostgresProductsRepository implements ProductsRepository {
     if (input.name !== undefined) {
       fields.push(`name = $${idx++}`);
       values.push(input.name);
+    }
+
+    if (input.type !== undefined) {
+      fields.push(`type = $${idx++}`);
+      values.push(input.type ?? null);
     }
 
     if (input.club !== undefined) {
@@ -474,6 +496,32 @@ export class PostgresProductsRepository implements ProductsRepository {
       values.push(input.isActive);
     }
 
+    // 🔥 NOVOS CAMPOS
+    if (input.gender !== undefined) {
+      fields.push(`gender = $${idx++}`);
+      values.push(input.gender);
+    }
+
+    if (input.allowPersonalization !== undefined) {
+      fields.push(`allow_personalization = $${idx++}`);
+      values.push(input.allowPersonalization);
+    }
+
+    if (input.infiniteStock !== undefined) {
+      fields.push(`infinite_stock = $${idx++}`);
+      values.push(input.infiniteStock);
+    }
+
+    if (input.isNew !== undefined) {
+      fields.push(`is_new = $${idx++}`);
+      values.push(input.isNew);
+    }
+
+    if (input.isNewDays !== undefined) {
+      fields.push(`is_new_days = $${idx++}`);
+      values.push(input.isNewDays);
+    }
+
     fields.push(`updated_at = NOW()`);
     values.push(id);
 
@@ -481,6 +529,10 @@ export class PostgresProductsRepository implements ProductsRepository {
       `UPDATE products SET ${fields.join(", ")} WHERE id = $${idx++} RETURNING *`,
       values,
     );
+
+    if (result.rows.length === 0) {
+      throw new Error(`Product with id ${id} not found`);
+    }
 
     return mapRowToProduct(result.rows[0]);
   }
