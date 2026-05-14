@@ -11,6 +11,7 @@ export async function adminRoutes(
   const repo = new PostgresProductsRepository(options.pgPool);
   const service = new ProductsService(repo);
 
+  // ── Produtos ──────────────────────────────────────────────────────────────
   app.get(
     "/products",
     { preHandler: [requireAdmin] },
@@ -151,15 +152,160 @@ export async function adminRoutes(
     },
   );
 
+  // ── Usuários (com estatísticas) ──────────────────────────────────────────
   app.get("/users", { preHandler: [requireAdmin] }, async (_request, reply) => {
     const result = await options.pgPool.query(
-      `SELECT id, email, name, favorite_team, role, created_at
-         FROM users
-         ORDER BY created_at DESC`,
+      `SELECT
+         u.id,
+         u.email,
+         u.name,
+         u.role,
+         u.favorite_team,
+         u.email_verified,
+         u.phone,
+         u.created_at,
+         COUNT(w.product_id) AS wishlist_count
+       FROM users u
+       LEFT JOIN wishlist w ON w.user_id = u.id
+       GROUP BY u.id
+       ORDER BY u.created_at DESC`,
     );
     return reply.send({ data: result.rows });
   });
 
+  // ── Clubes (CRUD completo) ──────────────────────────────────────────────
+  app.get("/clubs", { preHandler: [requireAdmin] }, async (request, reply) => {
+    const { search } = request.query as { search?: string };
+
+    let query = `SELECT * FROM clubs`;
+    const values: unknown[] = [];
+
+    if (search?.trim()) {
+      query += ` WHERE name_search ILIKE $1`;
+      values.push(`%${search.trim().toLowerCase()}%`);
+    }
+
+    query += ` ORDER BY name ASC`;
+
+    const result = await options.pgPool.query(query, values);
+    return reply.send({ data: result.rows });
+  });
+
+  app.post("/clubs", { preHandler: [requireAdmin] }, async (request, reply) => {
+    const { name, country = 'Brasil', type = 'CLUB' } = request.body as {
+      name: string;
+      country?: string;
+      type?: string;
+    };
+
+    if (!name?.trim()) {
+      return reply.status(400).send({ message: "Nome é obrigatório" });
+    }
+
+    const slug = name
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-");
+
+    const nameSearch = name
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .trim();
+
+    const result = await options.pgPool.query(
+      `INSERT INTO clubs (name, slug, name_search, country, type)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (slug) DO NOTHING
+       RETURNING *`,
+      [name.trim(), slug, nameSearch, country, type],
+    );
+
+    if (!result.rows[0]) {
+      return reply.status(409).send({ message: "Clube com esse nome já existe" });
+    }
+
+    return reply.status(201).send({ data: result.rows[0] });
+  });
+
+  app.patch("/clubs/:id", { preHandler: [requireAdmin] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { name, country, type } = request.body as {
+      name?: string;
+      country?: string;
+      type?: string;
+    };
+
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    let idx = 1;
+
+    if (name !== undefined) {
+      const slug = name
+        .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+        .toLowerCase().trim()
+        .replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-");
+      const nameSearch = name
+        .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+        .toLowerCase().trim();
+
+      fields.push(`name = $${idx++}`, `slug = $${idx++}`, `name_search = $${idx++}`);
+      values.push(name.trim(), slug, nameSearch);
+    }
+
+    if (country !== undefined) { fields.push(`country = $${idx++}`); values.push(country); }
+    if (type    !== undefined) { fields.push(`type = $${idx++}`);    values.push(type);    }
+
+    if (!fields.length) {
+      return reply.status(400).send({ message: "Nada para atualizar" });
+    }
+
+    values.push(id);
+    const result = await options.pgPool.query(
+      `UPDATE clubs SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`,
+      values,
+    );
+
+    if (!result.rows[0]) {
+      return reply.status(404).send({ message: "Clube não encontrado" });
+    }
+
+    return reply.send({ data: result.rows[0] });
+  });
+
+  app.delete("/clubs/:id", { preHandler: [requireAdmin] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    // Verificar se algum produto usa este clube
+    const clubResult = await options.pgPool.query(
+      `SELECT name FROM clubs WHERE id = $1`,
+      [id],
+    );
+
+    if (!clubResult.rows[0]) {
+      return reply.status(404).send({ message: "Clube não encontrado" });
+    }
+
+    const clubName = clubResult.rows[0].name;
+    const inUse = await options.pgPool.query(
+      `SELECT COUNT(*) FROM products WHERE club = $1 AND is_active = true`,
+      [clubName],
+    );
+
+    if (parseInt(inUse.rows[0].count) > 0) {
+      return reply.status(409).send({
+        message: `Clube está em uso em ${inUse.rows[0].count} produto(s). Remova os produtos primeiro.`,
+      });
+    }
+
+    await options.pgPool.query(`DELETE FROM clubs WHERE id = $1`, [id]);
+    return reply.send({ message: "Clube removido com sucesso" });
+  });
+
+  // ── Categorias ──────────────────────────────────────────────────────────
   app.get(
     "/categories",
     { onRequest: [requireAdmin] },
