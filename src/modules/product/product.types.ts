@@ -129,21 +129,24 @@ export interface UpdateProductInput {
 }
 
 export interface ProductFilters {
+  search?: string;
+ 
   club?: string;
   brand?: string;
+  gender?: ProductGender;
+  type?: ShirtType;
   category?: ProductCategory;
   categorySlug?: string;
-  type?: ShirtType;
-  gender?: ProductGender;
   season?: string;
   sizeCategorical?: ShirtSize;
   sizeNumeric?: string;
-  featured?: boolean;
   minPrice?: number;
   maxPrice?: number;
+  featured?: boolean;
   page?: number;
   limit?: number;
 }
+ 
 
 export interface SquadRestriction {
   playerName: string;

@@ -10,6 +10,7 @@ function toPublicProduct(product: any) {
 }
 
 interface ListQuery {
+  search?: string;
   page?: number;
   limit?: number;
   club?: string;
@@ -33,6 +34,7 @@ export class ProductsController {
     try {
 
       const { 
+        search,
         page = 1, 
         limit = 20, 
         club, 
@@ -50,6 +52,7 @@ export class ProductsController {
       const filters: ProductFilters = {
         page: Number(page),
         limit: Number(limit),
+        ...(search && { search }),
         ...(club && { club }),
         ...(brand && { brand }),
         ...(type && { type }),

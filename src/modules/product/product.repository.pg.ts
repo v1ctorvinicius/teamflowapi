@@ -159,14 +159,25 @@ export class PostgresProductsRepository implements ProductsRepository {
     const values: unknown[] = [];
     let idx = 1;
 
+    if (filters.search?.trim()) {
+      const term = `%${filters.search.trim().toLowerCase()}%`;
+      conditions.push(
+        `(unaccent(lower(name)) ILIKE unaccent($${idx})
+      OR club_search ILIKE $${idx}
+      OR lower(brand) ILIKE $${idx})`,
+      );
+      values.push(term);
+      idx++;
+    }
+
     if (filters.club) {
       conditions.push(`club_search ILIKE $${idx++}`);
       values.push(`%${filters.club.trim().toLowerCase()}%`);
     }
-
+   
     if (filters.brand) {
-      conditions.push(`brand ILIKE $${idx++}`);
-      values.push(`%${filters.brand.trim()}%`);
+      conditions.push(`lower(brand) ILIKE $${idx++}`);
+      values.push(`%${filters.brand.trim().toLowerCase()}%`);
     }
 
     if (filters.categorySlug) {
@@ -209,7 +220,7 @@ export class PostgresProductsRepository implements ProductsRepository {
       values.push(filters.maxPrice);
     }
 
-
+    console.log('🔍 [BACKEND] Filters recebidos:', JSON.stringify(filters, null, 2));
     const where = `WHERE ${conditions.join(" AND ")}`;
 
     const page = filters.page ?? 1;
