@@ -194,6 +194,7 @@ export class PostgresProductsRepository implements ProductsRepository {
       values.push(filters.gender);
     }
 
+
     const where = `WHERE ${conditions.join(" AND ")}`;
 
     const page = filters.page ?? 1;

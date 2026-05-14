@@ -4,7 +4,6 @@ import type { ProductsService } from "./product.service.ts";
 import type { ProductFilters } from "./product.types.ts";
 import type { ShirtSize, ShirtType } from "../../shared/types.ts";
 
-// Public fields - supplierMetadata is internal, should not leak
 function toPublicProduct(product: any) {
   const { supplierMetadata: _, ...pub } = product;
   return pub;
@@ -14,7 +13,9 @@ interface ListQuery {
   page?: number;
   limit?: number;
   club?: string;
+  brand?: string;
   type?: ShirtType;
+  gender?: 'MASCULINE' | 'FEMININE' | 'UNISEX';
   size?: ShirtSize;
   season?: string;
 }
@@ -27,20 +28,33 @@ export class ProductsController {
     reply: FastifyReply,
   ) {
     try {
-      const { page = 1, limit = 20, club, type, size, season } = request.query;
+
+      const { 
+        page = 1, 
+        limit = 20, 
+        club, 
+        brand,
+        type, 
+        gender,
+        size, 
+        season 
+      } = request.query;
+
 
       const filters: ProductFilters = {
         page: Number(page),
         limit: Number(limit),
         ...(club && { club }),
+        ...(brand && { brand }),
         ...(type && { type }),
+        ...(gender && { gender }),
         ...(size && { size }),
         ...(season && { season }),
       };
 
       const result = await this.service.listProducts(filters);
 
-      // Ensure data is an array
+
       let dataArray = [];
       if (Array.isArray(result.data)) {
         dataArray = result.data;
