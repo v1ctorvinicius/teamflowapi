@@ -184,14 +184,29 @@ export class PostgresProductsRepository implements ProductsRepository {
       values.push(filters.season);
     }
 
-    if (filters.size) {
-      conditions.push(`$${idx++} = ANY(stock_categorical)`);
-      values.push(filters.size);
-    }
-
     if (filters.gender) {
       conditions.push(`gender = $${idx++}`);
       values.push(filters.gender);
+    }
+
+    if (filters.sizeCategorical) {
+      conditions.push(`$${idx++} = ANY(stock_categorical)`);
+      values.push(filters.sizeCategorical);
+    }
+
+    if (filters.sizeNumeric) {
+      conditions.push(`stock_numeric ? $${idx++}`);
+      values.push(filters.sizeNumeric);
+    }
+
+    if (filters.minPrice !== undefined && filters.minPrice > 0) {
+      conditions.push(`base_price >= $${idx++}`);
+      values.push(filters.minPrice);
+    }
+
+    if (filters.maxPrice !== undefined && filters.maxPrice > 0) {
+      conditions.push(`base_price <= $${idx++}`);
+      values.push(filters.maxPrice);
     }
 
 

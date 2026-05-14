@@ -42,7 +42,29 @@ export async function productsRoutes(
   
   app.get("/:id", controller.get.bind(controller));
 
-  app.get("/", controller.list.bind(controller));
+
+  app.get("/", {
+    schema: {
+      querystring: {
+        type: "object",
+        properties: {
+          page: { type: "integer", minimum: 1 },
+          limit: { type: "integer", minimum: 1, maximum: 100 },
+          club: { type: "string" },
+          brand: { type: "string" },
+          categorySlug: { type: "string" },
+          type: { type: "string", enum: ["PLAYER", "FAN"] },
+          gender: { type: "string", enum: ["MASCULINE", "FEMININE", "UNISEX"] },
+          sizeCategorical: { type: "string" },
+          sizeNumeric: { type: "string" },
+          season: { type: "string" },
+          minPrice: { type: "number", minimum: 0 },
+          maxPrice: { type: "number", minimum: 0 },
+        },
+      },
+    },
+    handler: controller.list.bind(controller),
+  });
 
   app.post(
     "/:id/validate-personalization",

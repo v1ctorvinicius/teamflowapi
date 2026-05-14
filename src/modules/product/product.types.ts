@@ -139,6 +139,8 @@ export interface ProductFilters {
   sizeCategorical?: ShirtSize;
   sizeNumeric?: string;
   featured?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
   page?: number;
   limit?: number;
 }

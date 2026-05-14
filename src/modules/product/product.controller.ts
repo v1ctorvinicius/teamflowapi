@@ -16,8 +16,11 @@ interface ListQuery {
   brand?: string;
   type?: ShirtType;
   gender?: 'MASCULINE' | 'FEMININE' | 'UNISEX';
-  size?: ShirtSize;
+  sizeCategorical?: ShirtSize;
+  sizeNumeric?: string;
   season?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 export class ProductsController {
@@ -36,8 +39,11 @@ export class ProductsController {
         brand,
         type, 
         gender,
-        size, 
-        season 
+        sizeCategorical,
+        sizeNumeric,
+        season,
+        minPrice,
+        maxPrice,
       } = request.query;
 
 
@@ -48,8 +54,11 @@ export class ProductsController {
         ...(brand && { brand }),
         ...(type && { type }),
         ...(gender && { gender }),
-        ...(size && { size }),
+        ...(sizeCategorical && { sizeCategorical }),
+        ...(sizeNumeric && { sizeNumeric }),
         ...(season && { season }),
+        ...(minPrice !== undefined && { minPrice: minPrice }),
+        ...(maxPrice !== undefined && { maxPrice: maxPrice }),
       };
 
       const result = await this.service.listProducts(filters);
