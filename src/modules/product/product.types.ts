@@ -5,7 +5,7 @@ import type { UUID, ISODateString } from "../../shared/types.ts";
 // Categorias fixas legadas (mantidas para compatibilidade)
 export type ProductCategory = "SHIRT" | "SHOE" | "COMBO" | "ACCESSORY" | string;
 export type ProductGender = "MASCULINE" | "FEMININE" | "UNISEX";
-export type ShirtSize = "PP" | "P" | "M" | "G" | "GG" | "XGG" | "2XGG";
+export type ShirtSize = "PP" | "P" | "M" | "G" | "GG" | "GGG" | "GGGG";
 export type ShirtType = "PLAYER" | "FAN";
 export type ShoeSize = string;
 
@@ -130,7 +130,7 @@ export interface UpdateProductInput {
 
 export interface ProductFilters {
   search?: string;
- 
+
   club?: string;
   brand?: string;
   gender?: ProductGender;
@@ -146,7 +146,6 @@ export interface ProductFilters {
   page?: number;
   limit?: number;
 }
- 
 
 export interface SquadRestriction {
   playerName: string;

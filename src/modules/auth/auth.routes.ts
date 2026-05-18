@@ -14,16 +14,15 @@ export async function authRoutes(
   const service = new AuthService(authRepo, usersRepo);
   const controller = new AuthController(service);
 
-  // POST /auth/login
   app.post(
     "/login",
     {
       schema: {
         body: {
           type: "object",
-          required: ["email", "password"],
+          required: ["login", "password"],
           properties: {
-            email: { type: "string", format: "email" },
+            login: { type: "string" },
             password: { type: "string" },
           },
         },
@@ -32,7 +31,6 @@ export async function authRoutes(
     controller.login.bind(controller),
   );
 
-  // POST /auth/refresh
   app.post(
     "/refresh",
     {
@@ -49,7 +47,6 @@ export async function authRoutes(
     controller.refresh.bind(controller),
   );
 
-  // POST /auth/logout
   app.post(
     "/logout",
     {

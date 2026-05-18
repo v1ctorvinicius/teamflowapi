@@ -54,27 +54,49 @@ export class UsersService {
   ) {}
 
   async register(input: RegisterUserInput): Promise<RegisterResult> {
-    if (!input.email || !input.password || !input.name) {
-      throw new ValidationError("email, password, and name are required");
+    if (!input.username || !input.password || !input.name) {
+      throw new ValidationError("username, password and name are required");
+    }
+
+    if (input.username.length < 3) {
+      throw new ValidationError("username must be at least 3 characters");
     }
 
     if (input.password.length < 8) {
       throw new ValidationError("password must be at least 8 characters");
     }
 
-    if (input.favoriteTeam !== undefined && input.favoriteTeam.trim() === "") {
-      throw new ValidationError("favoriteTeam cannot be empty");
+    if (!/^[a-z0-9_]+$/.test(input.username)) {
+      throw new ValidationError(
+        "username can only contain lowercase letters, numbers and underscores",
+      );
     }
 
-    const existing = await this.repo.findByEmail(input.email.toLowerCase());
-    if (existing) {
-      throw new ConflictError("email already registered");
+    if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
+      throw new ValidationError("invalid email format");
+    }
+
+    const existingByUsername = await this.repo.findByUsername(
+      input.username.toLowerCase(),
+    );
+    if (existingByUsername) {
+      throw new ConflictError("username already taken");
+    }
+
+    if (input.email) {
+      const existingByEmail = await this.repo.findByEmail(
+        input.email.toLowerCase(),
+      );
+      if (existingByEmail) {
+        throw new ConflictError("email already registered");
+      }
     }
 
     const passwordHash = await hashPassword(input.password);
 
     const user = await this.repo.create({
-      email: input.email.toLowerCase(),
+      username: input.username.toLowerCase(),
+      email: input.email ? input.email.toLowerCase() : undefined,
       passwordHash,
       name: input.name,
       favoriteTeam: input.favoriteTeam,
@@ -82,7 +104,7 @@ export class UsersService {
 
     const tokens = await this.authService.issueTokenPairForUser(
       user.id,
-      user.email,
+      user.username,
       user.role,
     );
 

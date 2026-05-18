@@ -1,5 +1,5 @@
 -- ==========================================================
--- Migration 008: Expandir tabela clubs
+-- Migration 009: Expandir tabela clubs
 -- ==========================================================
 
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS country   TEXT NOT NULL DEFAULT 'Brasil';

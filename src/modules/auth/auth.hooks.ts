@@ -25,7 +25,7 @@ export async function authenticate(
     const { payload } = await jwtVerify(token, JWT_SECRET);
     (request as any).user = {
       id: payload.sub,
-      email: payload["email"],
+      email: payload["username"],
       role: payload["role"],
     };
   } catch {

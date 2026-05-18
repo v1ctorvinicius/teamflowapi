@@ -5,7 +5,8 @@ export type UserRole = "CUSTOMER" | "ADMIN" | "AFFILIATE";
 
 export interface User {
   id: UUID;
-  email: string;
+  username: string;
+  email?: string;
   passwordHash: string;
   name: string;
   role: "CUSTOMER" | "ADMIN" | "AFFILIATE";
@@ -27,9 +28,9 @@ export interface User {
 
 export interface PublicUser extends Omit<User, "passwordHash"> {}
 
-// inputs
 export interface CreateUserInput {
-  email: string;
+  username: string;
+  email?: string;
   passwordHash: string;
   name: string;
   favoriteTeam?: string;
@@ -38,10 +39,13 @@ export interface CreateUserInput {
 export type UpdateUserInput = UpdateProfileInput;
 
 export interface RegisterUserInput {
-  email: string;
-  password: string;
+  username: string;
   name: string;
+  email?: string;
+  password: string;
+  confirmPassword?: string;
   favoriteTeam?: string;
+  phone?: string;
 }
 
 export interface UpdateProfileInput {

@@ -23,12 +23,20 @@ export async function usersRoutes(
       schema: {
         body: {
           type: "object",
-          required: ["email", "password", "name"],
+          required: ["username", "password", "name"],
           properties: {
+            username: {
+              type: "string",
+              minLength: 3,
+              maxLength: 50,
+              pattern: "^[a-z0-9_]+$",
+            },
+            name: { type: "string", minLength: 1 },
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 8 },
-            name: { type: "string", minLength: 1 },
+            confirmPassword: { type: "string" },
             favoriteTeam: { type: "string" },
+            phone: { type: "string", maxLength: 20 },
           },
         },
       },

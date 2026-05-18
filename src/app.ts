@@ -10,6 +10,7 @@ import { productsRoutes } from "./modules/product/product.routes.ts";
 import { cartRoutes } from "./modules/cart/cart.routes.ts";
 import { clubsRoutes } from "./modules/clubs/clubs.routes.ts";
 import { adminRoutes } from "./modules/admin/admin.routes.ts";
+import { notificationsRoutes } from "./modules/notifications/notifications.routes.ts";
 
 interface AppOptions {
   pgPool: Pool;
@@ -32,6 +33,7 @@ export async function buildApp(
       await api.register(cartRoutes, { prefix: "/cart", pgPool, redis });
       await api.register(clubsRoutes, { prefix: "/clubs", pgPool });
       await app.register(adminRoutes, { prefix: "/admin", pgPool });
+      await app.register(notificationsRoutes, { pgPool, redis });
     },
     { prefix: "/api/v1" },
   );
