@@ -424,6 +424,11 @@ export class PostgresProductsRepository implements ProductsRepository {
       values.push(input.name);
     }
 
+    if (input.season !== undefined) {
+      fields.push(`season = $${idx++}`);
+      values.push(input.season ?? null);
+    }
+
     if (input.type !== undefined) {
       fields.push(`type = $${idx++}`);
       values.push(input.type ?? null);
