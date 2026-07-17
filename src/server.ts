@@ -20,9 +20,9 @@ async function bootstrap() {
   try {
     const address = await app.listen({ port: PORT, host: "0.0.0.0" });
     app.log.info(`[API] Server listening on port ${PORT}`);
-    app.log.info(`[API] Health → /health`);
-    app.log.info(`[API] Liveness → /live`);
-    app.log.info(`[API] Readiness → /ready`);
+    app.log.info(`[API] Health - /health`);
+    app.log.info(`[API] Liveness - /live`);
+    app.log.info(`[API] Readiness - /ready`);
     app.log.info(`[API] CORS enabled for configured origins`);
   } catch (err) {
     app.log.error(err, "[API] Failed to start server");

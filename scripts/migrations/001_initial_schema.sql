@@ -1,4 +1,3 @@
--- migrations/001_initial_schema.sql
 -- TeamFlow MVP — Initial Schema + Seed Data
 
 -- ─────────────────────────────────────────────

@@ -1,3 +1,4 @@
+
 // src/infra/db/postgres.ts
 import pg from "pg";
 import { config } from "../../config/env.ts";
@@ -8,8 +9,11 @@ let pool: pg.Pool | null = null;
 
 export function getPgPool(): pg.Pool {
   if (!pool) {
+    const user = encodeURIComponent(config.database.user);
+    const password = encodeURIComponent(config.database.password);
+
     pool = new Pool({
-      connectionString: `postgresql://${config.database.user}:${config.database.password}@${config.database.host}:${config.database.port}/${config.database.name}`,
+      connectionString: `postgresql://${user}:${password}@${config.database.host}:${config.database.port}/${config.database.name}`,
       max: 20,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
